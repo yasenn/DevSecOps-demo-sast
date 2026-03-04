@@ -1,0 +1,48 @@
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnapp-java
+  namespace: vulnapp
+  labels:
+    app: vulnapp-java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnapp-java
+  template:
+    metadata:
+      labels:
+        app: vulnapp-java
+    spec:
+      # VULN: no pod security context; by default containers can run as root
+      containers:
+        - name: vulnapp-java
+          image: cr.yandex/<your-registry-id>/vulnapp-java:latest # CHANGE THIS
+          ports:
+            - containerPort: 8080
+            - containerPort: 5005  # debug port exposed
+          env:
+            # VULN: hardcoded credentials in manifest
+            - name: DB_PASSWORD
+              value: "SuperSecret123!"
+            - name: ADMIN_PASSWORD
+              value: "admin123"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          # VULN: no liveness/readiness probe
+          # readinessProbe:
+          #   httpGet:
+          #     path: /actuator/health
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
+      # VULN: no imagePullSecrets; if registry is private, this will fail
+      # imagePullSecrets:
+      #   - name: yc-registry-key

@@ -1,0 +1,37 @@
+name: Semgrep SAST
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  semgrep:
+    permissions:
+      contents: read
+      security-events: write
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4 # Use the actions/checkout action
+      
+    - name: Semgrep
+      uses: semgrep/semgrep-action@v1 
+      with:
+        config: 
+          - p/Terraform
+          - p/Kubernetes
+          - p/ansible
+        generateSarif: "1"
+      subdir:
+        - absible
+        - k8s 
+      continue-on-error: true
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: semgrep.sarif
+        category: semgrep

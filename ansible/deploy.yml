@@ -1,0 +1,36 @@
+- name: Deploy vulnapp Java demo to Yandex Managed Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # Path to kubeconfig written by Terraform or generated from cluster
+    kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
+    k8s_namespace: vulnapp
+    k8s_manifests_dir: "{{ playbook_dir }}/k8s"
+
+  tasks:
+    - name: Ensure namespace exists
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ k8s_namespace }}"
+
+    - name: Read Kubernetes manifest files
+      ansible.builtin.find:
+        paths: "{{ k8s_manifests_dir }}"
+        patterns: "*.yaml,*.yml"
+      register: k8s_manifests
+
+    - name: Apply Kubernetes manifests
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        src: "{{ item.path }}"
+      loop: "{{ k8s_manifests.files }}"
+      loop_control:
+        label: "{{ item.path }}"

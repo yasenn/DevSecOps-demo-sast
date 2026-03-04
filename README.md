@@ -1,5 +1,9 @@
 # Vulnerable Java App - DevSecOps Demo
 
+# See also
+* [IaC](iac.md)
+* [K8s](k8s.md)
+
 ## Description
 Demo app with several vulnerabilities for DevSecOps training.<br>
 The project includes general CI/CD steps with security tools.<br>
